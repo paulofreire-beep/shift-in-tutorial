@@ -12,6 +12,7 @@ dependencies = [
 test = [
     "pytest",
     "pytest-cov",
+    "httpx",  # required by fastapi.testclient.TestClient
 ]
 
 # robotframework (system tests) is intentionally NOT listed here yet.
