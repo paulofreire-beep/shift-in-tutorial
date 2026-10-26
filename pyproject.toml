@@ -8,8 +8,14 @@ dependencies = [
     "uvicorn>=0.29",
 ]
 
-# Test tooling (pytest, pytest-cov, robotframework) is intentionally
-# NOT listed here. Adding it is part of the workshop (M3a onward).
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov",
+]
+
+# robotframework (system tests) is intentionally NOT listed here yet.
+# Adding it is part of the workshop (M4).
 
 [build-system]
 requires = ["hatchling"]
