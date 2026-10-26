@@ -55,6 +55,10 @@ redirect, validation or click-counting code meets the table; check it against th
   without the change.
 - Do not relax an SLO target (e.g. the 50 ms p95) or loosen a redirect, validation or click-count
   assertion to make a change pass; raise it instead.
+- A turn never ends with a failing test: if a test is red, fix it or say clearly that you could
+  not. (`xfail` markers tied to an open finding are expected, not red.) A Stop hook
+  (`.claude/hooks/run_tests.py`) enforces this by running the suite and blocking the stop on
+  failure; it blocks once, so a still-red suite after your fix attempt must be said out loud.
 
 ## Stack and conventions
 
@@ -62,8 +66,8 @@ redirect, validation or click-counting code meets the table; check it against th
   code generation, `store.py` storage). Routes: `POST /api/links`, `GET /api/links`,
   `GET /api/links/{code}/stats`, `GET /{code}`.
 - Run: `pip install -e .`, then `uvicorn snip.main:app --reload --app-dir src`.
-- Test tooling (pytest, pytest-cov, robotframework) is deliberately not in `pyproject.toml` yet;
-  adding it is part of the workshop. The target pyramid and SLI-to-level map are in
-  `docs/test-strategy.md`.
+- Run the suite: `pip install -e ".[test]"`, then `pytest tests/unit tests/api`.
+  robotframework (system tests) is deliberately not in `pyproject.toml` yet. The target pyramid
+  and SLI-to-level map are in `docs/test-strategy.md`.
 - Planned feature: link expiry (owners want links to stop working after a chosen time). It touches
   the redirect hot path, so its acceptance criteria must cover SLIs 1–3.
