@@ -135,6 +135,11 @@ def test_colliding_code_does_not_overwrite_existing_link(monkeypatch):
     monkeypatch.setattr(shortener, "generate_code", lambda: next(codes))
 
     first = shortener.create_link("https://first.example")
-    shortener.create_link("https://second.example")
+    second = shortener.create_link("https://second.example")
 
+    # The first link keeps its code and URL.
+    assert first.code == "AAAAAA"
     assert shortener.stats(first.code).url == "https://first.example"
+    # The retry must take the next generated code, and that link must resolve.
+    assert second.code == "BBBBBB"
+    assert shortener.stats(second.code).url == "https://second.example"
