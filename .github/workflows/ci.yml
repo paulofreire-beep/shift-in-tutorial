@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # STEP 1 — Production install and import check.
+      #
+      # Why this is its own step: every later step installs the "test" extras
+      # (pytest, pytest-cov, httpx) on top of the runtime dependencies. Those extras
+      # can silently supply a package the app itself needs at runtime, so the tests
+      # would pass while a real deployment, which installs only `dependencies`,
+      # crashes with ImportError. Installing into a fresh venv with production
+      # dependencies only, non-editable, then importing from outside the source
+      # tree, proves two things the tests cannot: `dependencies` in pyproject.toml
+      # is complete, and the built package contains the modules it should.
+      - name: "Step 1: install production dependencies only and check the app imports"
+        run: |
+          python -m venv "$RUNNER_TEMP/prod-venv"
+          "$RUNNER_TEMP/prod-venv/bin/pip" install .
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/prod-venv/bin/python" -c "import snip.main; print('imported', snip.main.__file__)"
+
+      - name: "Step 2: unit and API tests"
+        run: |
+          pip install -e ".[test]"
+          pytest tests/unit tests/api
+
+      # SLI 1 (redirect latency): starts a real uvicorn server and fails the build
+      # if p95 is not under the SLO documented in docs/slis.md.
+      - name: "Step 3: SLI gate (redirect latency p95)"
+        run: pytest tests/gates -s
